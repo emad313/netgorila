@@ -9,6 +9,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../configs/databaseprovider.dart';
+
 class Home extends StatefulWidget {
   const Home({super.key});
 
@@ -87,9 +89,6 @@ class _HomeState extends State<Home> {
       cellsResponse = CellsResponse.fromJson(body);
       CellType currentCellInFirstChip = cellsResponse.primaryCellList![0];
       CellType currentCellInSecondChip = cellsResponse.neighboringCellList![0];
-      
-
-
 
       String? simInfo = await CellInfo.getSIMInfo;
       final simJson = json.decode(simInfo!);
@@ -99,6 +98,33 @@ class _HomeState extends State<Home> {
         neighborCellInfo = body['neighboringCellList'][0];
         primarySimInfo = simJson['simInfoList'][0];
         neighborSimInfo = simJson['simInfoList'][1];
+
+        // insert to db with primaryCellInfo and primarySimInfo
+        DatabaseProvider.db.insert(
+          cellname: primaryCellInfo['lte']['bandLTE']['name'],
+          networkoperatorname: primarySimInfo['displayName'],
+          technology: primaryCellInfo['type'],
+          mcc: primarySimInfo['mcc'],
+          mnc: primarySimInfo['mnc'],
+          ci: primaryCellInfo['lte']['eci'],
+          cid: primaryCellInfo['lte']['cid'],
+          bandwidth: primaryCellInfo['lte']['bandwidth'],
+          pci: primaryCellInfo['lte']['pci'],
+          tac: primaryCellInfo['lte']['tac'],
+          cqi: primaryCellInfo['lte']['signalLTE']['cqi'],
+          dmb: primaryCellInfo['lte']['signalLTE']['dbm'],
+          enb: primaryCellInfo['lte']['enb'],
+          snr: primaryCellInfo['lte']['signalLTE']['snr'],
+          rssi: primaryCellInfo['lte']['signalLTE']['rssi'],
+          rssiasu: primaryCellInfo['lte']['signalLTE']['rssiAsu'],
+          rsrq: primaryCellInfo['lte']['signalLTE']['rsrq'],
+          rsrp: primaryCellInfo['lte']['signalLTE']['rsrp'],
+          rsrpasu: primaryCellInfo['lte']['signalLTE']['rsrpAsu'],
+          lattitude: 0.0,
+          longitude: 0.0,
+          location: 'Dhaka',
+          timingadvance: primaryCellInfo['lte']['signalLTE']['timingAdvance'],
+        );
       });
       
     } on PlatformException {
