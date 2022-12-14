@@ -39,6 +39,7 @@ dependencies:
   cell_info: ^0.2.9
   sqflite: ^2.2.2
   path_provider: ^2.0.11
+  json_table: ^2.0.1
 
 dev_dependencies:
   flutter_test:

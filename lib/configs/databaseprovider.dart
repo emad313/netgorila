@@ -24,27 +24,28 @@ class DatabaseProvider {
           'id INTEGER PRIMARY KEY AUTOINCREMENT,'
           'technology TEXT,'
           'networkoperatorname TEXT,'
+          'earfcn INTEGER,'
           'mcc INTEGER,'
           'mnc INTEGER,'
-          'cellname INTEGER,'
+          'cellname TEXT,'
           'ci INTEGER,'
           'enb INTEGER,'
           'cid INTEGER,'
           'tac INTEGER,'
           'pci INTEGER,'
           'bandwidth INTEGER,'
-          'cqi DOUBLE,'
+          'cqi INTEGER,'
           'rsrp DOUBLE,'
-          'rsrpasu DOUBLE,'
+          'rsrpasu INTEGER,'
           'rsrq DOUBLE,'
-          'rssi DOUBLE,'
-          'rssiasu DOUBLE,'
+          'rssi INTEGER,'
+          'rssiasu INTEGER,'
           'snr DOUBLE,'
-          'timingadvance DOUBLE,'
-          'dmb DOUBLE,'
+          'timingadvance INTEGER,'
+          'dmb INTEGER,'
           'lattitude DOUBLE,'
           'longitude DOUBLE,'
-          'location TEXT,'
+          'location TEXT'
           ')');
     });
   }
@@ -53,24 +54,25 @@ class DatabaseProvider {
   insert({
     String? technology,
     String? networkoperatorname,
+    int? earfcn,
     int? mcc,
     int? mnc,
-    int? cellname,
+    String? cellname,
     int? ci,
     int? enb,
     int? cid,
     int? tac,
     int? pci,
     int? bandwidth,
-    double? cqi,
+    int? cqi,
     double? rsrp,
-    double? rsrpasu,
+    int? rsrpasu,
     double? rsrq,
-    double? rssi,
-    double? rssiasu,
+    int? rssi,
+    int? rssiasu,
     double? snr,
-    double? timingadvance,
-    double? dmb,
+    int? timingadvance,
+    int? dmb,
     double? lattitude,
     double? longitude,
     String? location,
@@ -79,11 +81,12 @@ class DatabaseProvider {
     // var maxIdResult = await db!.rawQuery("SELECT MAX(id)+1 as last_inserted_id FROM Product"); 
     //   var id = maxIdResult.first["last_inserted_id"]; 
     var raw = await db!.rawInsert(
-        'INSERT Into Netdata (technology, networkoperatorname, mcc, mnc, cellname, ci, enb, cid, tac, pci, bandwidth, cqi, rsrp, rsrpasu, rsrq, rssi, rssiasu, snr, timingadvance, dmb, lattitude, longitude, location)'
-        ' VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
+        'INSERT Into Netdata (technology, networkoperatorname, earfcn, mcc, mnc, cellname, ci, enb, cid, tac, pci, bandwidth, cqi, rsrp, rsrpasu, rsrq, rssi, rssiasu, snr, timingadvance, dmb, lattitude, longitude, location)'
+        ' VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
         [
           technology,
           networkoperatorname,
+          earfcn,
           mcc,
           mnc,
           cellname,
@@ -114,24 +117,25 @@ class DatabaseProvider {
     int? id,
     String? technology,
     String? networkoperatorname,
+    int? earfcn,
     int? mcc,
     int? mnc,
-    int? cellname,
+    String? cellname,
     int? ci,
     int? enb,
     int? cid,
     int? tac,
     int? pci,
     int? bandwidth,
-    double? cqi,
+    int? cqi,
     double? rsrp,
-    double? rsrpasu,
+    int? rsrpasu,
     double? rsrq,
-    double? rssi,
-    double? rssiasu,
+    int? rssi,
+    int? rssiasu,
     double? snr,
-    double? timingadvance,
-    double? dmb,
+    int? timingadvance,
+    int? dmb,
     double? lattitude,
     double? longitude,
     String? location,
@@ -140,6 +144,7 @@ class DatabaseProvider {
     var res = await db!.update("Netdata", {
       "technology": technology,
       "networkoperatorname": networkoperatorname,
+      "earfcn": earfcn,
       "mcc": mcc,
       "mnc": mnc,
       "cellname": cellname,
