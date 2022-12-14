@@ -40,6 +40,9 @@ dependencies:
   sqflite: ^2.2.2
   path_provider: ^2.0.11
   json_table: ^2.0.1
+  to_csv: ^1.1.1
+  geolocator: ^9.0.1
+  geocoder_buddy: ^1.0.1
 
 dev_dependencies:
   flutter_test:

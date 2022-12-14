@@ -3,6 +3,8 @@ import 'dart:convert';
 
 import 'package:cell_info/CellResponse.dart';
 import 'package:cell_info/SIMInfoResponse.dart';
+import 'package:geocoder_buddy/geocoder_buddy.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:cell_info/cell_info.dart';
 import 'package:cell_info/models/common/cell_type.dart';
 import 'package:flutter/foundation.dart';
@@ -32,6 +34,9 @@ class _HomeState extends State<Home> {
   String nBandTypeCap = '';
   String nBandTypeSmall = '';
 
+  double lat = 0;
+  double lon = 0;
+
   bool loader = false;
 
 
@@ -54,6 +59,15 @@ class _HomeState extends State<Home> {
 
       String? simInfo = await CellInfo.getSIMInfo;
       final simJson = json.decode(simInfo!);
+      var getLocation = _determinePosition();
+      await getLocation.then((currentlocation) => {
+            setState(() {
+              lat = currentlocation.latitude;
+              lon = currentlocation.longitude;
+            })
+          });
+      GBLatLng position = GBLatLng(lat: lat, lng: lon);
+      GBData data = await GeocoderBuddy.findDetails(position);
       setState(() {
         if (currentCellInFirstChip.type == 'LTE') {
           bandTypeCap = 'LTE';
@@ -106,6 +120,7 @@ class _HomeState extends State<Home> {
         neighborSimInfo = simJson['simInfoList'][1];
 
         loader = true;
+        
         // insert to db with primaryCellInfo and primarySimInfo
         if (primaryCellInfo != null && primarySimInfo != null) {
           DatabaseProvider.db.insert(
@@ -129,9 +144,9 @@ class _HomeState extends State<Home> {
               rsrq: primaryCellInfo[bandTypeSmall]['signal$bandTypeCap']['rsrq'],
               rsrp: primaryCellInfo[bandTypeSmall]['signal$bandTypeCap']['rsrp'],
               rsrpasu: primaryCellInfo[bandTypeSmall]['signal$bandTypeCap']['rsrpAsu'],
-              lattitude: 0.0,
-              longitude: 0.0,
-              location: 'Dhaka',
+              lattitude: lat,
+              longitude: lon,
+              location: data.displayName,
               timingadvance: primaryCellInfo[bandTypeSmall]['signal$bandTypeCap']['timingAdvance'],
             );
         }
@@ -158,9 +173,9 @@ class _HomeState extends State<Home> {
               rsrq: neighborCellInfo[nBandTypeSmall]['signal$nBandTypeCap']['rsrq'],
               rsrp: neighborCellInfo[nBandTypeSmall]['signal$nBandTypeCap']['rsrp'],
               rsrpasu: neighborCellInfo[nBandTypeSmall]['signal$nBandTypeCap']['rsrpAsu'],
-              lattitude: 0.0,
-              longitude: 0.0,
-              location: 'Dhaka',
+              lattitude: lat,
+              longitude: lon,
+              location: data.displayName,
               timingadvance: neighborCellInfo[nBandTypeSmall]['signal$nBandTypeCap']['timingAdvance'],
             );
         }
@@ -170,11 +185,51 @@ class _HomeState extends State<Home> {
       printsome('Failed to get platform version.');
     }
   }
+  
+  Future<Position> _determinePosition() async {
+    final screenWidth = MediaQuery.of(context).size.width;
+    bool serviceEnabled;
+    LocationPermission permission;
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      showToast(context, message: 'Location services are disabled', color: Colors.red);
+      return Future.error('Location services are disabled.');
+    }
 
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        return Future.error('Location permissions are denied');
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      return Future.error(
+          'Location permissions are permanently denied, we cannot request permissions.');
+    }
+    return await Geolocator.getCurrentPosition();
+  }
   printsome(obj){
     if (kDebugMode) {
       print(obj);
     }
+  }
+
+    void showToast(BuildContext context, {required String message, required Color color}) {
+    final scaffold = ScaffoldMessenger.of(context);
+    scaffold.showSnackBar(
+      SnackBar(
+        content: Text(message),
+        duration: const Duration(seconds: 7),
+        backgroundColor: color,
+        action: SnackBarAction(
+        label: 'HIDE',
+        textColor: Colors.white, 
+        onPressed: scaffold.hideCurrentSnackBar
+        ),
+      ),
+    );
   }
 
   @override
