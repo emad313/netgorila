@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:json_table/json_table.dart';
-import 'package:netgorila/configs/databaseprovider.dart';
 import 'package:to_csv/to_csv.dart' as exportCSV;
+
+import '../configs/databaseprovider.dart';
 
 class NetDataTable extends StatefulWidget {
   const NetDataTable({super.key});
@@ -49,7 +50,7 @@ class _NetDataTableState extends State<NetDataTable> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('All Netdata'),
+        title: const Text('All DATA'),
         actions: [
           IconButton(
             onPressed: exportToCSV,

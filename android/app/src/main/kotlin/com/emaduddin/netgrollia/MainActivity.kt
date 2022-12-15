@@ -1,4 +1,4 @@
-package com.example.netgorila
+package com.emaduddin.netgrollia
 
 import android.Manifest
 import android.util.Log
@@ -13,10 +13,10 @@ class MainActivity: FlutterActivity() {
         ActivityCompat.requestPermissions(
             this,
             arrayOf(
+                Manifest.permission.READ_PHONE_STATE,
                 Manifest.permission.READ_EXTERNAL_STORAGE,
                 Manifest.permission.ACCESS_COARSE_LOCATION,
                 Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.READ_PHONE_STATE
 
             ),
             33

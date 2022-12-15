@@ -3,7 +3,8 @@ import 'dart:convert';
 
 import 'package:cell_info/CellResponse.dart';
 import 'package:cell_info/SIMInfoResponse.dart';
-import 'package:geocoder_buddy/geocoder_buddy.dart';
+import 'package:flutter_background_service/flutter_background_service.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:cell_info/cell_info.dart';
 import 'package:cell_info/models/common/cell_type.dart';
@@ -39,10 +40,13 @@ class _HomeState extends State<Home> {
 
   bool loader = false;
 
+  bool isServiceRunning = false;
+
 
   @override
   void initState() {
     super.initState();
+    checkFunction();
     startTimer();
   }
 
@@ -66,8 +70,12 @@ class _HomeState extends State<Home> {
               lon = currentlocation.longitude;
             })
           });
-      GBLatLng position = GBLatLng(lat: lat, lng: lon);
-      GBData data = await GeocoderBuddy.findDetails(position);
+
+          List<Placemark> placemarks = await placemarkFromCoordinates(lat, lon);
+          Placemark place = placemarks[0];
+          String currentLocation = '${place.street}, ${place.subLocality},${place.subAdministrativeArea}, ${place.postalCode}';
+
+          
       setState(() {
         if (currentCellInFirstChip.type == 'LTE') {
           bandTypeCap = 'LTE';
@@ -122,63 +130,63 @@ class _HomeState extends State<Home> {
         loader = true;
         
         // insert to db with primaryCellInfo and primarySimInfo
-        if (primaryCellInfo != null && primarySimInfo != null) {
-          DatabaseProvider.db.insert(
-              cellname: primaryCellInfo[bandTypeSmall]['band$bandTypeCap']['name'],
-              networkoperatorname: primarySimInfo['displayName'],
-              technology: primaryCellInfo['type'],
-              earfcn: primaryCellInfo[bandTypeSmall]['band$bandTypeCap']['channelNumber'],
-              mcc: primarySimInfo['mcc'],
-              mnc: primarySimInfo['mnc'],
-              ci: primaryCellInfo[bandTypeSmall]['eci'],
-              cid: primaryCellInfo[bandTypeSmall]['cid'],
-              bandwidth: primaryCellInfo[bandTypeSmall]['bandwidth'],
-              pci: primaryCellInfo[bandTypeSmall]['pci'],
-              tac: primaryCellInfo[bandTypeSmall]['tac'],
-              cqi: primaryCellInfo[bandTypeSmall]['signal$bandTypeCap']['cqi'],
-              dmb: primaryCellInfo[bandTypeSmall]['signal$bandTypeCap']['dbm'],
-              enb: primaryCellInfo[bandTypeSmall]['enb'],
-              snr: primaryCellInfo[bandTypeSmall]['signal$bandTypeCap']['snr'],
-              rssi: primaryCellInfo[bandTypeSmall]['signal$bandTypeCap']['rssi'],
-              rssiasu: primaryCellInfo[bandTypeSmall]['signal$bandTypeCap']['rssiAsu'],
-              rsrq: primaryCellInfo[bandTypeSmall]['signal$bandTypeCap']['rsrq'],
-              rsrp: primaryCellInfo[bandTypeSmall]['signal$bandTypeCap']['rsrp'],
-              rsrpasu: primaryCellInfo[bandTypeSmall]['signal$bandTypeCap']['rsrpAsu'],
-              lattitude: lat,
-              longitude: lon,
-              location: data.displayName,
-              timingadvance: primaryCellInfo[bandTypeSmall]['signal$bandTypeCap']['timingAdvance'],
-            );
-        }
+        // if (primaryCellInfo != null && primarySimInfo != null) {
+        //   DatabaseProvider.db.insert(
+        //       cellname: primaryCellInfo[bandTypeSmall]['band$bandTypeCap']['name'],
+        //       networkoperatorname: primarySimInfo['displayName'],
+        //       technology: primaryCellInfo['type'],
+        //       earfcn: primaryCellInfo[bandTypeSmall]['band$bandTypeCap']['channelNumber'],
+        //       mcc: primarySimInfo['mcc'],
+        //       mnc: primarySimInfo['mnc'],
+        //       ci: primaryCellInfo[bandTypeSmall]['eci'],
+        //       cid: primaryCellInfo[bandTypeSmall]['cid'],
+        //       bandwidth: primaryCellInfo[bandTypeSmall]['bandwidth'],
+        //       pci: primaryCellInfo[bandTypeSmall]['pci'],
+        //       tac: primaryCellInfo[bandTypeSmall]['tac'],
+        //       cqi: primaryCellInfo[bandTypeSmall]['signal$bandTypeCap']['cqi'],
+        //       dmb: primaryCellInfo[bandTypeSmall]['signal$bandTypeCap']['dbm'],
+        //       enb: primaryCellInfo[bandTypeSmall]['enb'],
+        //       snr: primaryCellInfo[bandTypeSmall]['signal$bandTypeCap']['snr'],
+        //       rssi: primaryCellInfo[bandTypeSmall]['signal$bandTypeCap']['rssi'],
+        //       rssiasu: primaryCellInfo[bandTypeSmall]['signal$bandTypeCap']['rssiAsu'],
+        //       rsrq: primaryCellInfo[bandTypeSmall]['signal$bandTypeCap']['rsrq'],
+        //       rsrp: primaryCellInfo[bandTypeSmall]['signal$bandTypeCap']['rsrp'],
+        //       rsrpasu: primaryCellInfo[bandTypeSmall]['signal$bandTypeCap']['rsrpAsu'],
+        //       lattitude: lat,
+        //       longitude: lon,
+        //       location: currentLocation,
+        //       timingadvance: primaryCellInfo[bandTypeSmall]['signal$bandTypeCap']['timingAdvance'],
+        //     );
+        // }
         // insert to db with neighborCellInfo and neighborSimInfo
-        if (neighborCellInfo != null && neighborSimInfo != null) {
-          DatabaseProvider.db.insert(
-              cellname: neighborCellInfo[nBandTypeSmall]['band$nBandTypeCap']['name'],
-              networkoperatorname: neighborSimInfo['displayName'],
-              technology: neighborCellInfo['type'],
-              earfcn: neighborCellInfo[nBandTypeSmall]['band$nBandTypeCap']['channelNumber'],
-              mcc: neighborSimInfo['mcc'],
-              mnc: neighborSimInfo['mnc'],
-              ci: neighborCellInfo[nBandTypeSmall]['eci'],
-              cid: neighborCellInfo[nBandTypeSmall]['cid'],
-              bandwidth: neighborCellInfo[nBandTypeSmall]['bandwidth'],
-              pci: neighborCellInfo[nBandTypeSmall]['pci'],
-              tac: neighborCellInfo[nBandTypeSmall]['tac'],
-              cqi: neighborCellInfo[nBandTypeSmall]['signal$nBandTypeCap']['cqi'],
-              dmb: neighborCellInfo[nBandTypeSmall]['signal$nBandTypeCap']['dbm'],
-              enb: neighborCellInfo[nBandTypeSmall]['enb'],
-              snr: neighborCellInfo[nBandTypeSmall]['signal$nBandTypeCap']['snr'],
-              rssi: neighborCellInfo[nBandTypeSmall]['signal$nBandTypeCap']['rssi'],
-              rssiasu: neighborCellInfo[nBandTypeSmall]['signal$nBandTypeCap']['rssiAsu'],
-              rsrq: neighborCellInfo[nBandTypeSmall]['signal$nBandTypeCap']['rsrq'],
-              rsrp: neighborCellInfo[nBandTypeSmall]['signal$nBandTypeCap']['rsrp'],
-              rsrpasu: neighborCellInfo[nBandTypeSmall]['signal$nBandTypeCap']['rsrpAsu'],
-              lattitude: lat,
-              longitude: lon,
-              location: data.displayName,
-              timingadvance: neighborCellInfo[nBandTypeSmall]['signal$nBandTypeCap']['timingAdvance'],
-            );
-        }
+        // if (neighborCellInfo != null && neighborSimInfo != null) {
+        //   DatabaseProvider.db.insert(
+        //       cellname: neighborCellInfo[nBandTypeSmall]['band$nBandTypeCap']['name'],
+        //       networkoperatorname: neighborSimInfo['displayName'],
+        //       technology: neighborCellInfo['type'],
+        //       earfcn: neighborCellInfo[nBandTypeSmall]['band$nBandTypeCap']['channelNumber'],
+        //       mcc: neighborSimInfo['mcc'],
+        //       mnc: neighborSimInfo['mnc'],
+        //       ci: neighborCellInfo[nBandTypeSmall]['eci'],
+        //       cid: neighborCellInfo[nBandTypeSmall]['cid'],
+        //       bandwidth: neighborCellInfo[nBandTypeSmall]['bandwidth'],
+        //       pci: neighborCellInfo[nBandTypeSmall]['pci'],
+        //       tac: neighborCellInfo[nBandTypeSmall]['tac'],
+        //       cqi: neighborCellInfo[nBandTypeSmall]['signal$nBandTypeCap']['cqi'],
+        //       dmb: neighborCellInfo[nBandTypeSmall]['signal$nBandTypeCap']['dbm'],
+        //       enb: neighborCellInfo[nBandTypeSmall]['enb'],
+        //       snr: neighborCellInfo[nBandTypeSmall]['signal$nBandTypeCap']['snr'],
+        //       rssi: neighborCellInfo[nBandTypeSmall]['signal$nBandTypeCap']['rssi'],
+        //       rssiasu: neighborCellInfo[nBandTypeSmall]['signal$nBandTypeCap']['rssiAsu'],
+        //       rsrq: neighborCellInfo[nBandTypeSmall]['signal$nBandTypeCap']['rsrq'],
+        //       rsrp: neighborCellInfo[nBandTypeSmall]['signal$nBandTypeCap']['rsrp'],
+        //       rsrpasu: neighborCellInfo[nBandTypeSmall]['signal$nBandTypeCap']['rsrpAsu'],
+        //       lattitude: lat,
+        //       longitude: lon,
+        //       location: currentLocation,
+        //       timingadvance: neighborCellInfo[nBandTypeSmall]['signal$nBandTypeCap']['timingAdvance'],
+        //     );
+        // }
       });
       
     } on PlatformException {
@@ -236,15 +244,33 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Net Goriala'),
+        title: const Text('Net Gorilla'),
         actions: [
           IconButton(onPressed: (){
             Navigator.push(context, MaterialPageRoute(builder: (context) => const NetDataTable()));
           }, icon: const Icon(Icons.equalizer)),
+          IconButton(
+            onPressed: () async {
+            final service = FlutterBackgroundService();
+                var isRunning = await service.isRunning();
+                if (isRunning) {
+                  service.invoke("stopService");
+                } else {
+                  service.startService();
+                }
+
+                if (!isRunning) {
+                  isServiceRunning = true;
+                } else {
+                  isServiceRunning = false;
+                }
+                setState(() {});
+          }, icon: Icon(isServiceRunning?Icons.stop : Icons.start)),
         ],
       ),
       body: ListView(
         children: [
+          
           loader?Padding(
             padding: const EdgeInsets.all(8.0),
             child: Card(
